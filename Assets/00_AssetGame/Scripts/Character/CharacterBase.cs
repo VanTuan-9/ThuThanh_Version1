@@ -16,10 +16,14 @@ public abstract class CharacterBase : MonoBehaviour, ICharacter
 
     [Tooltip("chi so toc do di chuyen")]
     [SerializeField] private float speedNumber = 1;
+    
+    [Tooltip("chi so hoi chieu khi tan cong")]
+    [SerializeField] private float timeReloadSkill = 1;
 
     [Tooltip("component animator controller")]
     [SerializeField] private AnimatorController animatorController;
 
+    [SerializeField] private CapsuleCollider2D collider2D;
     public virtual void Start() {
 
     }
@@ -28,18 +32,28 @@ public abstract class CharacterBase : MonoBehaviour, ICharacter
 
     }
 
+    public int GetAttackNumber() => attackNumber;
+    public float GetTimeHoiChieu() => timeReloadSkill;
+    public float GetSpeed() => speedNumber;
+
     public virtual void Attack() {
         Debug.Log(true);
         animatorController.ChangeAnim(AnimType.ATTACK);
         
     }
 
-    public virtual void BeAttacked() {
-        Debug.Log(true);
+    public virtual void BeAttacked(int attackNumber) {
+        animatorController.ChangeAnim(AnimType.BEATTACKED);
+        int attackNumberNew = attackNumber - defNumber;
+        if(attackNumberNew < 0)
+            attackNumberNew = 0;
+        hpNumber -= attackNumberNew;
     }
 
     public virtual void Die() {
         animatorController.ChangeAnim(AnimType.DIE);
+        collider2D.enabled = false;
+        StartCoroutine(DelayDie());
     }
 
     public virtual void RotatePlayer() {
@@ -48,6 +62,7 @@ public abstract class CharacterBase : MonoBehaviour, ICharacter
 
     public virtual void Run() {
         animatorController.ChangeAnim(AnimType.MOVE);
+
     }
 
     public virtual void UseSkill(SkillType skillType)
@@ -58,5 +73,10 @@ public abstract class CharacterBase : MonoBehaviour, ICharacter
     public virtual void BuffIndex()
     {
         
+    }
+    
+    private IEnumerator DelayDie() {
+        yield return new WaitForSeconds(1);
+        gameObject.SetActive(false);
     }
 }
