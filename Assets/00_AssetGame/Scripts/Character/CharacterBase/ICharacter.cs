@@ -1,10 +1,9 @@
 public interface ICharacter {
     void Attack();
-    void BeAttacked();
+    void BeAttacked(int attackNumber);
     void Run();
     void Die();
     void UseSkill(SkillType skillType);
-    void RotatePlayer();
-    
+    void RotateCharacter(); 
     void BuffIndex();
 }
