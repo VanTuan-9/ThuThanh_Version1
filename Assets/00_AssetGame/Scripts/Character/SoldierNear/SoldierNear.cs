@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.VisualScripting;
+using UnityEditor.PackageManager;
 
 public class SoldierNear : CharacterBase
 {
@@ -15,10 +16,18 @@ public class SoldierNear : CharacterBase
     // đổi mục tiêu quái mới
 
     // phương thức bị quái tấn 
-    public override void Attack()
+    [SerializeField] protected Vector2 boxSize;
+    [SerializeField] protected Transform poinAttack;
+    [SerializeField] protected LayerMask layerMask;
+    protected override void Attacking()
     {
-        base.Attack();
-        isMoveToEnemy = false;
-    }
+        RaycastHit2D hit = Physics2D.BoxCast(poinAttack.position, boxSize, 0f, Vector2.zero, layerMask);
 
+        if (hit.collider && !hit.collider.isTrigger)
+            Damage(hit.collider.gameObject);
+    }
+    protected virtual void Damage(GameObject enemy)
+    {
+        enemy.GetComponent<CharacterBase>().BeAttacked(attackNumber);
+    }
 }

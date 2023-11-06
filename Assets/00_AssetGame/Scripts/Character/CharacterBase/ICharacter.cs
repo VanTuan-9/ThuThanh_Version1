@@ -5,5 +5,4 @@ public interface ICharacter {
     void Die();
     void UseSkill(SkillType skillType);
     void RotateCharacter(); 
-    void BuffIndex();
 }

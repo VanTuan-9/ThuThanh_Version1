@@ -4,5 +4,8 @@ using UnityEngine;
 
 public class Enemy : SoldierNear
 {
-
+    public override void Run()
+    {
+       // base.Run();
+    }
 }

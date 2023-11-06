@@ -2,54 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CheckCollider : MonoBehaviour, ICollider
+public abstract class CheckCollider : MonoBehaviour, ICollider
 {
-    // collider su dung loai onTrigger
-    [SerializeField] private CharacterType characterType;
+    protected CharacterBase character;
 
-    //tag, layer, name
-    private string tag = "";
-    
-    private void Start() {
-        switch(characterType) {
-            case CharacterType.SOLDIER: 
-            tag = "enemy";
-            break;
-            case CharacterType.FORTRESS:
-            tag = "enemy";
-            break;
-            case CharacterType.ENEMY:
-            tag = "soldier";
-            break;
-        }
-    }
-
-    private void OnTriggerEnter2D(Collider2D other) {
-        if(other.CompareTag(tag)) {
-            // code chuc nang
-        }
-    }
-
-    private void OnTriggerStay2D(Collider2D other) {
-
-    }
-
-    private void OnTriggerExit2D(Collider2D other) {
-
-    }
-
-    public void OnCollidePlayer()
+    protected virtual void Awake()
     {
-        throw new System.NotImplementedException();
+        character = GetComponent<CharacterBase>();
     }
 
-    public void OnCollideFortress()
-    {
-        throw new System.NotImplementedException();
+    protected virtual void OnTriggerEnter2D(Collider2D other) {
     }
 
-    public void OnCOllideEnemy()
-    {
-        throw new System.NotImplementedException();
+    protected virtual void OnTriggerStay2D(Collider2D other) {
+        OnCollide(other);
     }
+
+    protected virtual void OnTriggerExit2D(Collider2D other) {
+
+    }
+
+    public abstract void OnCollide(Collider2D other);
 }

@@ -1,7 +1,5 @@
+using UnityEngine;
+
 public interface ICollider {
-    void OnCollidePlayer();
-
-    void OnCollideFortress();
-
-    void OnCOllideEnemy();
+    void OnCollide(Collider2D other);
 }

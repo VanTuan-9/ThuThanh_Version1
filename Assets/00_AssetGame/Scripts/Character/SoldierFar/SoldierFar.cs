@@ -4,5 +4,8 @@ using UnityEngine;
 
 public class SoldierFar : CharacterBase
 {
-
+    protected override void Attacking()
+    {
+        throw new System.NotImplementedException();
+    }
 }

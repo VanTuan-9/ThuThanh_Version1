@@ -1,138 +1,98 @@
-﻿using DG.Tweening;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using DG.Tweening;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
+using Unity.VisualScripting;
 
 public abstract class CharacterBase : MonoBehaviour, ICharacter
 {
+    /*--------------------THUOC_TINH---------------------*/
+
     [Header("==Character attributes==")]
     [Tooltip("chi so tan cong")]
     [SerializeField] protected int attackNumber = 1;
 
     [Tooltip("chi so HP")]
-    [SerializeField] protected int hpNumber = 1;
+    [SerializeField] protected int hpNumber = 10;
 
     [Tooltip("chi so phong thu")]
-    [SerializeField] protected int defNumber = 1;
+    [SerializeField] protected int defNumber = 0;
 
     [Tooltip("chi so toc do di chuyen")]
     [SerializeField] protected float speedNumber = 1;
     
     [Tooltip("chi so hoi chieu khi tan cong")]
     [SerializeField] protected float timeReloadSkill = 1;
-
+    protected float time;
+    /*--------------------GET_COMPONENT---------------------*/
     [Tooltip("component animator controller")]
     [SerializeField] protected AnimatorController animatorController;
 
-    [SerializeField] protected CapsuleCollider2D collider2D;
+    [Tooltip("component rigidbody2d")]
+    [SerializeField] protected Rigidbody2D rb;
 
-    //--------------------------
-    protected bool isMoveToEnemy = false;
-    protected bool isMoveToStart = true;
-    protected bool isAttack = false;
-
+    /*--------------------CHECK_HANH_VI---------------------*/
+    protected bool isMoveToEnemy = true;
     protected bool isPacingRight = true;
 
-    protected List<GameObject> enemyIsSeen = new List<GameObject>();
+    protected List<GameObject> characterIsSeen = new List<GameObject>();
+    Vector2 vectorDirection;
 
-    protected virtual void Start() {
+    object idTarget = null;
 
-    }
-    private void OnEnable()
+    protected virtual void Awake()
     {
-        if (!isMoveToStart) return;
-        animatorController.ChangeAnim(AnimType.MOVE);
-        this.MoveToStart(positionStart());
+        if (!animatorController)
+            animatorController = this.GetComponent<AnimatorController>();
+        if (!rb)
+            rb = GetComponent<Rigidbody2D>();
     }
 
-    protected virtual void Update() {
-
-    }
-
-
-    public virtual void Attack()
+    protected virtual void Start()
     {
-        if(isAttack && )
-        animatorController.ChangeAnim(AnimType.ATTACK);
+        time = timeReloadSkill;
     }
 
-    public virtual void BeAttacked(int attackNumber) {
-        animatorController.ChangeAnim(AnimType.BEATTACKED);
-        int attackNumberNew = attackNumber - defNumber;
-        if(attackNumberNew < 0)
-            attackNumberNew = 0;
-        hpNumber -= attackNumberNew;
-    }
-
-    public virtual void Die() {
-        animatorController.ChangeAnim(AnimType.DIE);
-        collider2D.enabled = false;
-        isMoveToEnemy = false;
-        isMoveToStart = false;
-        StartCoroutine(DelayDie());
-    }
-
-    public virtual void RotateCharacter() {
-        if (isPacingRight && transform.position.x < 0) {
-            ChangeLocalScaleToRotateCharacter();
-            isPacingRight = false;
-        }
-        else if (!isPacingRight && transform.localScale.x > 0) {
-            ChangeLocalScaleToRotateCharacter();
-            isPacingRight = true;
-        }
-    }
-    private void ChangeLocalScaleToRotateCharacter()
+    protected virtual void Update()
     {
-        transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
+        Run();
+        RotateCharacter();
+        Die();
     }
 
+    /*--------------------RUN_TO_ENEMY------------------*/
     public virtual void Run()
     {
-        if (!isMoveToEnemy) return;
-        animatorController.ChangeAnim(AnimType.MOVE);
-        this.MoveToEnemy(SelectEnemyToMove());
+         bool characterIsSeenIsNull = characterIsSeen.Count == 0;
+        if (isMoveToEnemy && !characterIsSeenIsNull){
+            animatorController.ChangeAnim(AnimType.MOVE);
+            this.MoveToEnemy(SelectEnemyToMove());
+        }
     }
 
-    public virtual void UseSkill(SkillType skillType)
-    {
-        
-    }
-
-    public void BuffIndex()
-    {
-    }
-
-    protected IEnumerator DelayDie() {
-        yield return new WaitForSeconds(1);
-        gameObject.SetActive(false);
-    }
-    protected virtual void MoveToStart(Vector2 positionStart)
-    {   
-        float timeMove = Vector2.Distance(transform.position, positionStart) / speedNumber;
-        transform.DOMove(positionStart, timeMove).SetEase(Ease.Linear);
-    }
     protected virtual void MoveToEnemy(GameObject enemyNear)
     {
+        VectorDirection(enemyNear.transform.position);
         Vector2 pos = Vector3.Normalize(enemyNear.transform.position - transform.position);
-        transform.Translate(pos * speedNumber);
+        transform.Translate(pos * speedNumber * Time.deltaTime);
     }
-    protected virtual void ChangeEnemyIsSeen()
+
+    public void ChangeCharacterIsSeen(List<GameObject> enemy)
     {
-        //dong bo enemy ma tru nhin thay voi linh
+        characterIsSeen = enemy;
     }
+
     protected virtual GameObject SelectEnemyToMove()
     {
-        GameObject enemyNear = enemyIsSeen[0];
-        foreach(GameObject enemy in enemyIsSeen)
+        GameObject enemyNear = characterIsSeen[0];
+        foreach (GameObject enemy in characterIsSeen)
         {
-            if(CompareWithEnemy(enemy,enemyNear))
+            if (CompareWithEnemy(enemy, enemyNear))
                 enemyNear = enemy;
         }
         return enemyNear;
     }
+
     private bool CompareWithEnemy(GameObject enemy, GameObject enemyNear)
     {
         float distanceEnemyNear = Vector2.Distance(transform.position, enemy.transform.position);
@@ -141,13 +101,94 @@ public abstract class CharacterBase : MonoBehaviour, ICharacter
             return true;
         return false;
     }
-    private Vector2 positionStart()
-    {
-        return new Vector2(0,0);
+
+    public void AniMove(){
+        animatorController.ChangeAnim(AnimType.MOVE);
     }
-    private bool isReloadSkill()
+
+    /*--------------------ROTATECHARACTER---------------*/
+    public void VectorDirection(Vector2 destination)
     {
-        
-        if
+        Vector2 startingPoint = transform.position;
+        vectorDirection = destination - startingPoint;
     }
+    public virtual void RotateCharacter()
+    {
+        if (isPacingRight && vectorDirection.x < 0)
+        {
+            ChangeLocalScaleToRotateCharacter();
+            isPacingRight = false;
+        }
+        else if (!isPacingRight && vectorDirection.x > 0)
+        {
+            ChangeLocalScaleToRotateCharacter();
+            isPacingRight = true;
+        }
+    }
+
+    private void ChangeLocalScaleToRotateCharacter()
+    {
+        transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
+    }
+
+    /*--------------------ATTACK------------------------*/
+    public virtual void Attack()
+    {
+        if (IsReloadSkill())
+        {
+            isMoveToEnemy = false;
+            animatorController.ChangeAnim(AnimType.ATTACK);
+            Attacking();
+            Debug.Log(hpNumber);
+        }
+    }
+
+    private bool IsReloadSkill()
+    {
+        time += Time.deltaTime;
+        if (time > timeReloadSkill)
+        {
+            time = 0;
+            return true;
+        }
+        return false;
+    }
+
+    protected abstract void Attacking();
+
+    public virtual void StopAttacking()
+    {
+        isMoveToEnemy = true;
+    }
+    /*--------------------BEATTACK----------------------*/
+    public virtual void BeAttacked(int attackNumber)
+    {
+        animatorController.ChangeAnim(AnimType.BEATTACKED);
+        int attackNumberNew = attackNumber - defNumber;
+        if (attackNumberNew < 0)
+            attackNumberNew = 0;
+        hpNumber -= attackNumberNew;
+    }
+
+    /*--------------------USESKILL----------------------*/
+    public virtual void UseSkill(SkillType skillType)
+    {
+
+    }
+
+    /*--------------------DIE---------------------------*/
+
+    public virtual void Die() {
+        if (hpNumber > 0) return;
+        animatorController.ChangeAnim(AnimType.DIE);
+        GetComponent<Collider2D>().enabled = false;
+        isMoveToEnemy = false;
+        StartCoroutine(DelayDie());
+    }
+
+    protected IEnumerator DelayDie() {
+        yield return new WaitForSeconds(1);
+        gameObject.SetActive(false);
+    }
+
 }

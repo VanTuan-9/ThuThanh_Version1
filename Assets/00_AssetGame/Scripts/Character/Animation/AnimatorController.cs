@@ -5,7 +5,6 @@ using UnityEngine;
 public class AnimatorController : MonoBehaviour, IAnimator
 {
     [SerializeField] private Animator anim;
-
     public void ChangeAnim(AnimType animType) {
         switch(animType) {
             case AnimType.IDLE:
@@ -68,7 +67,7 @@ public class AnimatorController : MonoBehaviour, IAnimator
 
     public void BeAttacked()
     {
-        throw new System.NotImplementedException();
+        anim.SetTrigger("BeAttack");
     }
 
     public void Die()
